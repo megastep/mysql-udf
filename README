@@ -1,0 +1,18 @@
+This is a set of UDF functions for MySQL originally written by Jan Steeman.
+
+http://mysql-udf.sourceforge.net/
+
+These functions have been brought up to date with the MySQL API, and I added some functions (such as STEYX from Excel).
+I added a build system (simple Makefile) to easily compile all functions as a single library which can be installed with
+other MySQL plugins. The development environment for this library is Ubuntu Linux (64bit). The library should build cleanly on any
+standard Linux development machine with g++ and the MySQL development libraries and headers installed.
+
+The import.sql script provides the necesary commands to import the UDF functions into MySQL. You need to be an administrator
+to be able to do that.
+
+The repository on GitHub is at http://github.com/megastep/mysql-udf
+
+
+--
+Stephane Peter
+October 2011

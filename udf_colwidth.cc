@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #ifdef __WIN__
-typedef unsigned __int64 ulonglong;	
+typedef unsigned __int64 ulonglong;
 typedef __int64 longlong;
 #else
 typedef unsigned long long ulonglong;
@@ -32,7 +32,7 @@ typedef long long longlong;
 #endif
 #include <mysql.h>
 #include <m_ctype.h>
-#include <m_string.h>	
+#include <m_string.h>
 
 #ifdef HAVE_DLOPEN
 
@@ -67,10 +67,10 @@ my_bool colwidth_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
     strcpy(message, "wrong argument type: colwidth() requires a string as parameter 1");
     return 1;
   }
-  
+
   data = new struct colwidth_data;
   data->maxlength=0;
-  
+
   initid->maybe_null	= 0;
   initid->ptr = (char*)data;
 
@@ -91,20 +91,23 @@ void colwidth_deinit( UDF_INIT* initid )
 }
 
 
-void colwidth_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message )
-{
-  struct colwidth_data* data = (struct colwidth_data*)initid->ptr;
-  
-  data->maxlength=(long long) 0;
-  colwidth_add( initid, args, is_null, message );
+void colwidth_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message ) {
+    struct colwidth_data* data = (struct colwidth_data*)initid->ptr;
+    data->maxlength=(long long) 0;
+}
+
+
+void colwidth_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message ) {
+    colwidth_clear( initid, args, is_null, message );
+    colwidth_add( initid, args, is_null, message );
 }
 
 
 void colwidth_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message )
 {
   struct colwidth_data* data	= (struct colwidth_data*)initid->ptr;
-  
-  if (args->args[0] && (args->lengths[0]>data->maxlength)) 
+
+  if (args->args[0] && (args->lengths[0]>data->maxlength))
   {
     data->maxlength=args->lengths[0];
   }
@@ -114,8 +117,8 @@ void colwidth_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* messag
 long long colwidth( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
 {
   struct colwidth_data* data = (struct colwidth_data*)initid->ptr;
- 
-  *is_null=0; 
+
+  *is_null=0;
   if (data->maxlength)
   {
     return data->maxlength;
@@ -125,5 +128,5 @@ long long colwidth( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error
 
 
 }
-#endif 
+#endif
 

@@ -42,7 +42,7 @@ extern "C"
 {
 
 my_bool stdnorm_density_init(UDF_INIT *, UDF_ARGS *args, char *message);
-double stdnorm_density_(UDF_INIT *initid, UDF_ARGS *args, char *is_null,char *error);
+double stdnorm_density(UDF_INIT *initid, UDF_ARGS *args, char *is_null,char *error);
 
 }
 

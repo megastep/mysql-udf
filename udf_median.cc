@@ -14,6 +14,9 @@
   getting rid of the function:
   DROP FUNCTION median;
 
+  04/15/2009 
+       - added percentile, an optional third parameter median function
+       - default percentile is 50 (for the standard median)
 */
 
 
@@ -35,7 +38,7 @@ typedef long long longlong;
 #include <m_ctype.h>
 #include <m_string.h>		
 
-#ifdef HAVE_DLOPEN
+/*#ifdef HAVE_DLOPEN*/
 
 
 #define BUFFERSIZE 1024	
@@ -45,7 +48,7 @@ typedef long long longlong;
 extern "C" {
 my_bool median_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
 void median_deinit( UDF_INIT* initid );
-void median_clear(UDF_INIT *initid, char *is_null, char *is_error);
+void median_clear( UDF_INIT* initid, char* is_null, char *error );
 void median_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 void median_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 double median( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
@@ -57,13 +60,14 @@ struct median_data
   unsigned long count;
   unsigned long abscount;
   unsigned long pages;
+  unsigned long percentile;
   double *values;
 };
 
 
 my_bool median_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
 {
-  if (args->arg_count < 1 || args->arg_count>2)
+  if (args->arg_count < 1 || args->arg_count>3)
   {
     strcpy(message,"wrong number of arguments: median() requires one or two arguments");
     return 1;
@@ -71,8 +75,9 @@ my_bool median_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
 
   if (args->arg_type[0]!=REAL_RESULT)
   {
-    strcpy(message,"median() requires a real as parameter 1");
-    return 1;
+    /* strcpy(message,"median() requires a real as parameter 1");
+       return 1; */
+    args->arg_type[0] = REAL_RESULT;
   }
 
   if (args->arg_count>1 && (args->arg_type[1]!=INT_RESULT))
@@ -87,11 +92,20 @@ my_bool median_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
     initid->decimals=*((ulong*)args->args[1]);
   }
 
+  /* Default median percentage is 50% */
+  unsigned long percentile=50;
+  if (args->arg_count==3 && (*((ulong*)args->args[2])>=0) && (*((ulong*)args->args[2])<=100))
+  {
+    percentile=*((ulong*)args->args[2]);
+  }
+
+
   median_data *buffer = new median_data;
   buffer->count = 0;
   buffer->abscount=0;
   buffer->pages = 1;
   buffer->values = NULL;
+  buffer->percentile=percentile;
 
   initid->maybe_null	= 1;
   initid->max_length	= 32;
@@ -114,7 +128,7 @@ void median_deinit( UDF_INIT* initid )
 }
 
 
-void median_clear(UDF_INIT *initid, char *is_null, char *is_error)
+void median_clear( UDF_INIT* initid, char* is_null, char* is_error )
 {
   median_data *buffer = (median_data*)initid->ptr;
   buffer->count = 0;
@@ -131,6 +145,7 @@ void median_clear(UDF_INIT *initid, char *is_null, char *is_error)
 
   buffer->values=(double *) malloc(BUFFERSIZE*sizeof(double));
 }
+
 
 void median_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
 {
@@ -185,14 +200,9 @@ double median( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
 
   qsort(buffer->values,buffer->abscount,sizeof(double),compare_doubles);
 
-  if (buffer->abscount&1==1) 
-  {
-    return buffer->values[(buffer->abscount-1)/2];
-  } else
-  {
-    return (buffer->values[(buffer->abscount-2)/2]+buffer->values[buffer->abscount/2])/2.0;
-  }
+  unsigned long bufindex = (ulong) ((((double)buffer->abscount - 1.0) * (double)buffer->percentile) / 100.0);
+  return buffer->values[bufindex];
 }
 
-#endif
+/* #endif */
 

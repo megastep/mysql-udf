@@ -2,7 +2,7 @@
   returns the skewness of the values in a distribution
 
   input parameters:
-  data (real)
+  data (coerced to real)
   number of decimals in result (int, optional)
 
   output:
@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #ifdef __WIN__
-typedef unsigned __int64 ulonglong;	
+typedef unsigned __int64 ulonglong;
 typedef __int64 longlong;
 #else
 typedef unsigned long long ulonglong;
@@ -33,7 +33,7 @@ typedef long long longlong;
 #endif
 #include <mysql.h>
 #include <m_ctype.h>
-#include <m_string.h>		
+#include <m_string.h>
 
 #ifdef HAVE_DLOPEN
 
@@ -45,6 +45,7 @@ typedef long long longlong;
 extern "C" {
 my_bool skewness_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
 void skewness_deinit( UDF_INIT* initid );
+void skewness_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 void skewness_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 void skewness_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 double skewness( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
@@ -68,11 +69,7 @@ my_bool skewness_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
     return 1;
   }
 
-  if (args->arg_type[0]!=REAL_RESULT)
-  {
-    strcpy(message,"skewness() requires a real as parameter 1");
-    return 1;
-  }
+  args->arg_type[0] = REAL_RESULT;
 
   if (args->arg_count>1 && (args->arg_type[1]!=INT_RESULT))
   {
@@ -114,7 +111,7 @@ void skewness_deinit( UDF_INIT* initid )
 
 
 
-void skewness_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
+void skewness_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
 {
   skewness_data *buffer = (skewness_data*)initid->ptr;
   buffer->count = 0;
@@ -131,6 +128,15 @@ void skewness_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_e
 
   buffer->values=(double *) malloc(BUFFERSIZE*sizeof(double));
 
+}
+
+
+void skewness_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
+{
+  skewness_clear( initid, args, is_null, is_error );
+  if (*is_error > 0) {
+    return;
+  }
   skewness_add( initid, args, is_null, is_error );
 }
 
@@ -172,7 +178,7 @@ double skewness( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error
   }
 
   mean/=(double) buffer->abscount;
-  
+
   for (i=0;i<buffer->abscount;++i)
   {
     term=buffer->values[i]-mean;

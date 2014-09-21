@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #ifdef __WIN__
-typedef unsigned __int64 ulonglong;	
+typedef unsigned __int64 ulonglong;
 typedef __int64 longlong;
 #else
 typedef unsigned long long ulonglong;
@@ -33,7 +33,7 @@ typedef long long longlong;
 #endif
 #include <mysql.h>
 #include <m_ctype.h>
-#include <m_string.h>		
+#include <m_string.h>
 
 #ifdef HAVE_DLOPEN
 
@@ -42,6 +42,7 @@ typedef long long longlong;
 extern "C" {
 my_bool geomean_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
 void geomean_deinit( UDF_INIT* initid );
+void geomean_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error );
 void geomean_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 void geomean_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 double geomean( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
@@ -56,42 +57,43 @@ struct geomean_data
 };
 
 
-my_bool geomean_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
-{
-  if (args->arg_count < 1 || args->arg_count>2)
-  {
-    strcpy(message,"wrong number of arguments: geomean() requires one or two arguments");
-    return 1;
-  }
+my_bool geomean_init( UDF_INIT* initid, UDF_ARGS* args, char* message ) {
 
-  if (args->arg_type[0]!=REAL_RESULT)
-  {
-    strcpy(message,"geomean() requires a real as parameter 1");
-    return 1;
-  }
+    if (args->arg_count < 1 || args->arg_count>2) {
+        strcpy(message,"wrong number of arguments: geomean() requires one or two arguments");
+        return 1;
+    }
 
-  if (args->arg_count>1 && (args->arg_type[1]!=INT_RESULT))
-  {
-    strcpy(message,"geomean() requires an int as parameter 2");
-    return 1;
-  }
+    if (args->arg_type[0] == INT_RESULT) {
+        args->arg_type[0] = REAL_RESULT;
+    }
 
-  initid->decimals=2;
-  if (args->arg_count==2 && (*((ulong*)args->args[1])<=16))
-  {
-    initid->decimals=*((ulong*)args->args[1]);
-  }
+    if (args->arg_type[0] != REAL_RESULT) {
+        strcpy(message,"geomean() requires a real as parameter 1");
+        return 1;
+    }
 
-  geomean_data *buffer = new geomean_data;
-  buffer->count = 0;
-  buffer->value=0;
-  buffer->isset=false;
+    if (args->arg_count>1 && (args->arg_type[1] != INT_RESULT)) {
+        strcpy(message,"geomean() requires an int as parameter 2");
+        return 1;
+    }
 
-  initid->maybe_null	= 1;
-  initid->max_length	= 32;
-  initid->ptr = (char*)buffer;
+    initid->decimals = 2;
 
-  return 0;
+    if (args->arg_count == 2 && (*((ulong*)args->args[1]) <= 16)) {
+        initid->decimals = *((ulong*)args->args[1]);
+    }
+
+    geomean_data *buffer = new geomean_data;
+    buffer->count = 0;
+    buffer->value = 0;
+    buffer->isset = false;
+
+    initid->maybe_null = 1;
+    initid->max_length = 32;
+    initid->ptr = (char*)buffer;
+
+    return 0;
 }
 
 
@@ -102,7 +104,7 @@ void geomean_deinit( UDF_INIT* initid )
 
 
 
-void geomean_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
+void geomean_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
 {
   geomean_data *buffer = (geomean_data*)initid->ptr;
   buffer->count = 0;
@@ -110,10 +112,13 @@ void geomean_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_er
   buffer->isset=false;
   *is_null = 0;
   *is_error = 0;
-
-  geomean_add( initid, args, is_null, is_error );
 }
 
+void geomean_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
+{
+  geomean_clear( initid, args, is_null, is_error );
+  geomean_add( initid, args, is_null, is_error );
+}
 
 void geomean_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
 {

@@ -43,6 +43,7 @@ typedef long long longlong;
 extern "C" {
 my_bool weightedavg_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
 void weightedavg_deinit( UDF_INIT* initid );
+void weightedavg_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error );
 void weightedavg_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 void weightedavg_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 double weightedavg( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
@@ -107,7 +108,8 @@ void weightedavg_deinit( UDF_INIT* initid )
   delete initid->ptr;
 }
 
-void weightedavg_clear(UDF_INIT *initid, char *is_null, char *is_error)
+
+void weightedavg_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
 {
   weightedavg_data *buffer = (weightedavg_data*)initid->ptr;
   buffer->count = 0;
@@ -119,7 +121,7 @@ void weightedavg_clear(UDF_INIT *initid, char *is_null, char *is_error)
 
 void weightedavg_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error )
 {
-  weightedavg_clear(initid, is_null, is_error);
+  weightedavg_clear( initid, args, is_null, is_error );
   weightedavg_add( initid, args, is_null, is_error );
 }
 

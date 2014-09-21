@@ -40,6 +40,7 @@ typedef long long longlong;
 extern "C" {
 my_bool longest_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
 void longest_deinit( UDF_INIT* initid );
+void longest_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error );
 void longest_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 void longest_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char *error );
 char *longest(UDF_INIT * initid, UDF_ARGS *args, char *result, unsigned long *length, char *is_null, char * /*error*/ );
@@ -95,8 +96,7 @@ void longest_deinit( UDF_INIT* initid )
   }
 }
 
-void longest_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message )
-{
+void longest_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* is_error ){
   struct longest_data* data = (struct longest_data*) initid->ptr;
   if (data->result_string != NULL)
   {
@@ -104,7 +104,11 @@ void longest_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* messa
     data->result_string	= NULL;
   }
   data->length = 0;
-  *is_null = 0;
+  *is_null = 0;}
+
+void longest_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message )
+{
+  longest_clear( initid, args, is_null, message );
   longest_add( initid, args, is_null, message );
 }
 

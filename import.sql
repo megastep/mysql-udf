@@ -1,5 +1,5 @@
 CREATE AGGREGATE FUNCTION colwidth RETURNS INTEGER SONAME 'udf_math.so';
-CREATE FUNCTION confidence_upper RETURNS REAL SONAME 'udf_math.so';
+CREATE FUNCTION confidence_higher RETURNS REAL SONAME 'udf_math.so';
 CREATE FUNCTION confidence_lower RETURNS REAL SONAME 'udf_math.so';
 CREATE AGGREGATE FUNCTION correlation RETURNS REAL SONAME 'udf_math.so';
 CREATE FUNCTION faculty RETURNS REAL SONAME 'udf_math.so';

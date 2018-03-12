@@ -7,7 +7,7 @@ I added a build system (simple Makefile) to easily compile all functions as a si
 other MySQL plugins. The development environment for this library is Ubuntu Linux (64bit). The library should build cleanly on any
 standard Linux development machine with g++ and the MySQL development libraries and headers installed.
 
-The import.sql script provides the necesary commands to import the UDF functions into MySQL. You need to be an administrator
+The import.sql script provides the necessary commands to import the UDF functions into MySQL. You need to be an administrator
 to be able to do that.
 
 The repository on GitHub is at http://github.com/megastep/mysql-udf
